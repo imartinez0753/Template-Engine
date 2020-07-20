@@ -4,35 +4,19 @@ const Intern = require("./lib/Intern");
 const inquirer = require("inquirer");
 const path = require("path");
 const fs = require("fs");
-
+const util = require("util");
 const OUTPUT_DIR = path.resolve(__dirname, "output");
 const outputPath = path.join(OUTPUT_DIR, "team.html");
-
+const asyncWriteFile = util.promisify(fs.writeFile);
 const render = require("./lib/htmlRenderer");
 const Choices = require("inquirer/lib/objects/choices");
 const employees = [];
 
-// Write code to use inquirer to gather information about the development team members,
-// and to create objects for each team member (using the correct classes as blueprints!)
-// function promptEmployee() {
-//   return inquirer.prompt([
-//     {
-//       type: "input",
-//       name: "name",
-//       message: "What is your name?"
-//     },
-//     {
-//       type: "input",
-//       name: "id",
-//       message: "What is your ID number?"
-//     },
-//     {
-//       type: "input",
-//       name: "email",
-//       message: "What is your e-mail?"
-//     }
-//   ]);
-// }
+function makeGroup() {
+  const Results = render(employees);
+  asyncWriteFile(outputPath, Results);
+}
+
 function promptRole() {
   return inquirer.prompt({
     type: "checkbox",
@@ -113,56 +97,55 @@ function promptIntern() {
     }
   ]);
 }
-async function askQuestions() {
-  try {
-    promptRole().then(function (data) {
-      console.log(data.role[0]);
-      if (data.role[0] === "Intern") {
-        promptIntern().then(function (answers) {
-          console.log("reached Prompt Intern");
-          const internObj = new Intern(
-            answers.id,
-            answers.email,
-            answers.name,
-            answers.school
-          );
-          employees.push(internObj);
 
-          // return console.table(employees);
-        });
-      }
-      if (data.role[0] === "Manager") {
-        promptManager().then(function (answers) {
-          const managerObj = new Manager(
-            answers.id,
-            answers.email,
-            answers.name,
-            answers.officeNumber
-          );
-          employees.push(managerObj);
-        });
-      } else if (data.role[0] === "Engineer") {
-        promptEngineer().then(function (answers) {
-          const engineerObj = new Engineer(
-            answers.id,
-            answers.email,
-            answers.name,
-            answers.github
-          );
-          employees.push(engineerObj);
-        });
-      }
-    });
+promptRole()
+  .then(function (data) {
+    console.log(data.role[0]);
+    if (data.role[0] === "Intern") {
+      promptIntern().then(function (answers) {
+        console.log("reached Prompt Intern");
+        const internObj = new Intern(
+          answers.id,
+          answers.email,
+          answers.name,
+          answers.school
+        );
+        employees.push(internObj);
 
-    // .then(function () {
-    await render(employees);
-    console.table(employees);
-    // })
-  } catch (err) {
+        // return console.table(employees);
+      });
+    }
+    if (data.role[0] === "Manager") {
+      promptManager().then(function (answers) {
+        const managerObj = new Manager(
+          answers.id,
+          answers.email,
+          answers.name,
+          answers.officeNumber
+        );
+        employees.push(managerObj);
+      });
+    } else if (data.role[0] === "Engineer") {
+      promptEngineer().then(function (answers) {
+        const engineerObj = new Engineer(
+          answers.id,
+          answers.email,
+          answers.name,
+          answers.github
+        );
+        employees.push(engineerObj);
+      });
+    }
+  })
+  .then(function () {
+    makeGroup();
+    // console.table(employees);
+  })
+
+  .catch(function (err) {
     console.log(err);
-  }
-}
-askQuestions();
+  });
+
 // After the user has input all employees desired, call the `render` function (required
 // above) and pass in an array containing all employee objects; the `render` function will
 // generate and return a block of HTML including templated divs for each employee!
