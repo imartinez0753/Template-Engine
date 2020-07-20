@@ -126,8 +126,7 @@ function build() {
 
           // return console.table(employees);
         });
-      }
-      if (data.role[0] === "Manager") {
+      } else if (data.role[0] === "Manager") {
         promptManager().then(function (answers) {
           const managerObj = new Manager(
             answers.id,
@@ -143,8 +142,7 @@ function build() {
             }
           });
         });
-      }
-      if (data.role[0] === "Engineer") {
+      } else if (data.role[0] === "Engineer") {
         promptEngineer().then(function (answers) {
           const engineerObj = new Engineer(
             answers.id,
