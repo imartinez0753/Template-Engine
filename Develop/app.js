@@ -16,7 +16,14 @@ function makeGroup() {
   const Results = render(employees);
   asyncWriteFile(outputPath, Results);
 }
-
+function addAnother() {
+  return inquirer.prompt({
+    type: "confirm",
+    name: "answer",
+    message: "Would you like to set up another employee?",
+    default: true
+  });
+}
 function promptRole() {
   return inquirer.prompt({
     type: "checkbox",
@@ -97,55 +104,70 @@ function promptIntern() {
     }
   ]);
 }
+function build() {
+  promptRole()
+    .then(function (data) {
+      // console.log(data.role[0]);
+      if (data.role[0] === "Intern") {
+        promptIntern().then(function (answers) {
+          const internObj = new Intern(
+            answers.id,
+            answers.email,
+            answers.name,
+            answers.school
+          );
+          employees.push(internObj);
+          makeGroup();
+          addAnother().then(function (answers) {
+            if (answers.answer === true) {
+              build();
+            }
+          });
 
-promptRole()
-  .then(function (data) {
-    console.log(data.role[0]);
-    if (data.role[0] === "Intern") {
-      promptIntern().then(function (answers) {
-        console.log("reached Prompt Intern");
-        const internObj = new Intern(
-          answers.id,
-          answers.email,
-          answers.name,
-          answers.school
-        );
-        employees.push(internObj);
+          // return console.table(employees);
+        });
+      }
+      if (data.role[0] === "Manager") {
+        promptManager().then(function (answers) {
+          const managerObj = new Manager(
+            answers.id,
+            answers.email,
+            answers.name,
+            answers.officeNumber
+          );
+          employees.push(managerObj);
+          makeGroup();
+          addAnother().then(function (answers) {
+            if (answers.answer === true) {
+              build();
+            }
+          });
+        });
+      }
+      if (data.role[0] === "Engineer") {
+        promptEngineer().then(function (answers) {
+          const engineerObj = new Engineer(
+            answers.id,
+            answers.email,
+            answers.name,
+            answers.github
+          );
+          employees.push(engineerObj);
+          makeGroup();
+          addAnother().then(function (answers) {
+            if (answers.answer === true) {
+              build();
+            }
+          });
+        });
+      }
+    })
 
-        // return console.table(employees);
-      });
-    }
-    if (data.role[0] === "Manager") {
-      promptManager().then(function (answers) {
-        const managerObj = new Manager(
-          answers.id,
-          answers.email,
-          answers.name,
-          answers.officeNumber
-        );
-        employees.push(managerObj);
-      });
-    } else if (data.role[0] === "Engineer") {
-      promptEngineer().then(function (answers) {
-        const engineerObj = new Engineer(
-          answers.id,
-          answers.email,
-          answers.name,
-          answers.github
-        );
-        employees.push(engineerObj);
-      });
-    }
-  })
-  .then(function () {
-    makeGroup();
-    // console.table(employees);
-  })
-
-  .catch(function (err) {
-    console.log(err);
-  });
-
+    .catch(function (err) {
+      console.log(err);
+    });
+}
+build();
 // After the user has input all employees desired, call the `render` function (required
 // above) and pass in an array containing all employee objects; the `render` function will
 // generate and return a block of HTML including templated divs for each employee!
